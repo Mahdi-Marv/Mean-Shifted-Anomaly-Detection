@@ -145,8 +145,8 @@ def get_loader_aptos(batch_size, backbone):
     train_normal_path = glob('/kaggle/working/Mean-Shifted-Anomaly-Detection/APTOS1/train/NORMAL/*')
     train_normal_label = [0] * len(train_normal_path)
 
-    test_normal_path = glob('/kaggle/working/Mean-Shifted-Anomaly-Detection/APTOS1/test/NORMAL/*')
-    test_anomaly_path = glob('/kaggle/working/Mean-Shifted-Anomaly-Detection/APTOS1/test/ABNORMAL/*')
+    test_normal_path = glob('/kaggle/working/Mean-Shifted-Anomaly-Detection/APTOS2/test/NORMAL/*')
+    test_anomaly_path = glob('/kaggle/working/Mean-Shifted-Anomaly-Detection/APTOS2/test/ABNORMAL/*')
 
     test_path = test_normal_path + test_anomaly_path
     test_label = [0] * len(test_normal_path) + [1] * len(test_anomaly_path)
