@@ -97,6 +97,7 @@ def get_score(model, device, train_loader, test_loader):
 
     return auc, train_feature_space
 
+
 def main(args):
     print('Dataset: {}, Normal Label: {}, LR: {}'.format(args.dataset, args.label, args.lr))
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -104,7 +105,8 @@ def main(args):
     model = utils.Model(args.backbone)
     model = model.to(device)
 
-    train_loader, test_loader, train_loader_1 = utils.get_loaders(dataset=args.dataset, label_class=args.label, batch_size=args.batch_size, backbone=args.backbone)
+    train_loader, test_loader, train_loader_1 = utils.get_loader_aptos(batch_size=args.batch_size,
+                                                                       backbone=args.backbone)
     train_model(model, train_loader, test_loader, train_loader_1, device, args)
 
 
