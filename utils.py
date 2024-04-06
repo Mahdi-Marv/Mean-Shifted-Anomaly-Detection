@@ -17,7 +17,7 @@ from torch.utils.data import Dataset, DataLoader
 from PIL import Image
 from glob import glob
 
-import matplotlib as plt
+import matplotlib.pyplot as plt
 
 
 class GaussianBlur(object):
