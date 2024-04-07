@@ -10,6 +10,47 @@ import random
 from torchvision.transforms import InterpolationMode
 BICUBIC = InterpolationMode.BICUBIC
 
+from PIL import Image
+from glob import glob
+from torchvision import datasets, transforms
+from torch.utils.data import Dataset, DataLoader
+import numpy as np
+
+import matplotlib.pyplot as plt
+
+def show_images(images, labels, dataset_name):
+    num_images = len(images)
+    rows = int(num_images / 5) + 1
+
+    fig, axes = plt.subplots(rows, 5, figsize=(15, rows * 3))
+
+    for i, ax in enumerate(axes.flatten()):
+        if i < num_images:
+            ax.imshow(images[i].permute(1, 2, 0))  # permute to (H, W, C) for displaying RGB images
+            ax.set_title(f"Label: {labels[i]}")
+        ax.axis("off")
+
+    plt.savefig(f'{dataset_name}_visualization.png')
+
+def visualize_random_samples_from_clean_dataset(dataset, dataset_name):
+    print(f"Start visualization of clean dataset: {dataset_name}")
+    # Choose 20 random indices from the dataset
+    if len(dataset) > 20:
+        random_indices = random.sample(range(len(dataset)), 20)
+    else:
+        random_indices = [i for i in range(len(dataset))]
+
+    # Retrieve corresponding samples
+    random_samples = [dataset[i] for i in random_indices]
+
+    # Separate images and labels
+    images, labels = zip(*random_samples)
+
+    labels = torch.tensor(labels)
+
+    # Show the 20 random samples
+    show_images(images, labels, dataset_name)
+
 class GaussianBlur(object):
     """Gaussian blur augmentation in SimCLR https://arxiv.org/abs/2002.05709"""
 
@@ -130,3 +171,55 @@ def get_loaders(dataset, label_class, batch_size, backbone):
     else:
         print('Unsupported Dataset')
         exit()
+def get_loader_isic(batch_size, backbone):
+    transform = transform_color if backbone == 152 else transform_resnet18
+
+    train_path = glob('./ISIC_DATASET/dataset/train/NORMAL/*')
+    train_label = [0] * len(train_path)
+    test_anomaly_path = glob('./ISIC_DATASET/dataset/test/ABNORMAL/*')
+    test_anomaly_label = [1] * len(test_anomaly_path)
+    test_normal_path = glob('./ISIC_DATASET/dataset/test/NORMAL/*')
+    test_normal_label = [0] * len(test_normal_path)
+
+    test_label = test_anomaly_label + test_normal_label
+    test_path = test_anomaly_path + test_normal_path
+
+    train_set = ISIC2018(image_path=train_path, labels=train_label, transform=transform)
+    trainset_1 = ISIC2018(image_path=train_path, labels=train_label, transform=Transform())
+    test_set = ISIC2018(image_path=test_path, labels=test_label, transform=transform)
+
+    visualize_random_samples_from_clean_dataset(train_set, "trainset")
+    visualize_random_samples_from_clean_dataset(test_set, "testset")
+
+    train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=2,
+                                               drop_last=False)
+    test_loader = torch.utils.data.DataLoader(test_set, batch_size=batch_size, shuffle=False, num_workers=2,
+                                              drop_last=False)
+    return train_loader, test_loader, torch.utils.data.DataLoader(trainset_1, batch_size=batch_size,
+                                                                  shuffle=True, num_workers=2, drop_last=False)
+
+class ISIC2018(Dataset):
+    def __init__(self, image_path, labels, transform=None, count=-1):
+        self.transform = transform
+        self.image_files = image_path
+        self.labels = labels
+        if count != -1:
+            if count<len(self.image_files):
+                self.image_files = self.image_files[:count]
+                self.labels = self.labels[:count]
+            else:
+                t = len(self.image_files)
+                for i in range(count-t):
+                    self.image_files.append(random.choice(self.image_files[:t]))
+                    self.labels.append(random.choice(self.labels[:t]))
+
+    def __getitem__(self, index):
+        image_file = self.image_files[index]
+        image = Image.open(image_file)
+        image = image.convert('RGB')
+        if self.transform is not None:
+            image = self.transform(image)
+        return image, self.labels[index]
+
+    def __len__(self):
+        return len(self.image_files)

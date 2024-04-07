@@ -104,7 +104,7 @@ def main(args):
     model = utils.Model(args.backbone)
     model = model.to(device)
 
-    train_loader, test_loader, train_loader_1 = utils.get_loaders(dataset=args.dataset, label_class=args.label, batch_size=args.batch_size, backbone=args.backbone)
+    train_loader, test_loader, train_loader_1 = utils.get_loader_isic(batch_size=args.batch_size, backbone=args.backbone)
     train_model(model, train_loader, test_loader, train_loader_1, device, args)
 
 
