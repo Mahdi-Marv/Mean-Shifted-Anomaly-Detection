@@ -199,7 +199,7 @@ def get_loader_isic(batch_size, backbone):
 
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=2,
                                                drop_last=False)
-    test_loader = torch.utils.data.DataLoader(test_set, batch_size=batch_size, shuffle=False, num_workers=2,
+    test_loader = torch.utils.data.DataLoader(test_set, batch_size=batch_size, shuffle=True, num_workers=2,
                                               drop_last=False)
     test_loader_20 = test_loader_2(transform, batch_size)
     return train_loader, test_loader, torch.utils.data.DataLoader(trainset_1, batch_size=batch_size,
