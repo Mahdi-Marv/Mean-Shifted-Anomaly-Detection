@@ -202,7 +202,7 @@ def get_loader_isic(batch_size, backbone):
     test_loader = torch.utils.data.DataLoader(test_set, batch_size=batch_size, shuffle=False, num_workers=2,
                                               drop_last=False)
     test_loader_20 = test_loader_2(transform, batch_size)
-    return train_loader, test_loader, torch.utils.data.DataLoader(trainset_1, batch_size=batch_size,
+    return train_loader, test_loader_20, torch.utils.data.DataLoader(trainset_1, batch_size=batch_size,
                                                                   shuffle=True, num_workers=2, drop_last=False)
 
 
@@ -217,6 +217,10 @@ def test_loader_2(transform, batch_size):
 
     shifted_test_set = PAD_UFES_20(image_path=shifted_test_path, labels=shifted_test_label, transform=transform)
     shifted_test_loader = torch.utils.data.DataLoader(shifted_test_set, shuffle=False, batch_size=batch_size)
+
+    visualize_random_samples_from_clean_dataset(shifted_test_set, "testset")
+
+
     return shifted_test_loader
 
 
