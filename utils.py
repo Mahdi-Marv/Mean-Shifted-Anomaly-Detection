@@ -184,7 +184,7 @@ def get_loader_isic(batch_size, backbone):
     train_label = [0] * len(train_path)
     test_anomaly_path = glob('/kaggle/input/isic-task3-dataset/dataset/test/ABNORMAL/*')
     test_anomaly_label = [1] * len(test_anomaly_path)
-    test_normal_path = glob('/kaggle/input/isic-task3-dataset/dataset/test/NORMAL   /*')
+    test_normal_path = glob('/kaggle/input/isic-task3-dataset/dataset/test/NORMAL/*')
     test_normal_label = [0] * len(test_normal_path)
 
     test_label = test_anomaly_label + test_normal_label
@@ -202,7 +202,7 @@ def get_loader_isic(batch_size, backbone):
     test_loader = torch.utils.data.DataLoader(test_set, batch_size=batch_size, shuffle=False, num_workers=2,
                                               drop_last=False)
     test_loader_20 = test_loader_2(transform, batch_size)
-    return train_loader, test_loader_20, torch.utils.data.DataLoader(trainset_1, batch_size=batch_size,
+    return train_loader, test_loader, torch.utils.data.DataLoader(trainset_1, batch_size=batch_size,
                                                                   shuffle=True, num_workers=2, drop_last=False)
 
 
