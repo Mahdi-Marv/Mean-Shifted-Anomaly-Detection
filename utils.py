@@ -8,6 +8,7 @@ import torch.nn.functional as F
 from PIL import ImageFilter
 import random
 from torchvision.transforms import InterpolationMode
+
 BICUBIC = InterpolationMode.BICUBIC
 
 from PIL import Image
@@ -15,8 +16,10 @@ from glob import glob
 from torchvision import datasets, transforms
 from torch.utils.data import Dataset, DataLoader
 import numpy as np
+import pandas as pd
 
 import matplotlib.pyplot as plt
+
 
 def show_images(images, labels, dataset_name):
     num_images = len(images)
@@ -31,6 +34,7 @@ def show_images(images, labels, dataset_name):
         ax.axis("off")
 
     plt.savefig(f'{dataset_name}_visualization.png')
+
 
 def visualize_random_samples_from_clean_dataset(dataset, dataset_name):
     print(f"Start visualization of clean dataset: {dataset_name}")
@@ -50,6 +54,7 @@ def visualize_random_samples_from_clean_dataset(dataset, dataset_name):
 
     # Show the 20 random samples
     show_images(images, labels, dataset_name)
+
 
 class GaussianBlur(object):
     """Gaussian blur augmentation in SimCLR https://arxiv.org/abs/2002.05709"""
@@ -74,7 +79,6 @@ transform_resnet18 = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 ])
-
 
 moco_transform = transforms.Compose([
     transforms.RandomResizedCrop(224, scale=(0.2, 1.)),
@@ -122,6 +126,7 @@ class Model(torch.nn.Module):
         z_n = F.normalize(z1, dim=-1)
         return z_n
 
+
 def freeze_parameters(model, backbone, train_fc=False):
     if not train_fc:
         for p in model.fc.parameters():
@@ -135,7 +140,6 @@ def freeze_parameters(model, backbone, train_fc=False):
             p.requires_grad = False
         for p in model.layer2.parameters():
             p.requires_grad = False
-
 
 
 def knn_score(train_set, test_set, n_neighbours=2):
@@ -171,14 +175,16 @@ def get_loaders(dataset, label_class, batch_size, backbone):
     else:
         print('Unsupported Dataset')
         exit()
+
+
 def get_loader_isic(batch_size, backbone):
     transform = transform_color if backbone == 152 else transform_resnet18
 
-    train_path = glob('./ISIC_DATASET/dataset/train/NORMAL/*')
+    train_path = glob('/kaggle/input/isic-task3-dataset/dataset/train/NORMAL/*')
     train_label = [0] * len(train_path)
-    test_anomaly_path = glob('./ISIC_DATASET/dataset/test/ABNORMAL/*')
+    test_anomaly_path = glob('/kaggle/input/isic-task3-dataset/dataset/test/ABNORMAL/*')
     test_anomaly_label = [1] * len(test_anomaly_path)
-    test_normal_path = glob('./ISIC_DATASET/dataset/test/NORMAL/*')
+    test_normal_path = glob('/kaggle/input/isic-task3-dataset/dataset/test/NORMAL   /*')
     test_normal_label = [0] * len(test_normal_path)
 
     test_label = test_anomaly_label + test_normal_label
@@ -195,8 +201,24 @@ def get_loader_isic(batch_size, backbone):
                                                drop_last=False)
     test_loader = torch.utils.data.DataLoader(test_set, batch_size=batch_size, shuffle=False, num_workers=2,
                                               drop_last=False)
+    test_loader_20 = test_loader_2(transform, batch_size)
     return train_loader, test_loader, torch.utils.data.DataLoader(trainset_1, batch_size=batch_size,
                                                                   shuffle=True, num_workers=2, drop_last=False)
+
+
+def test_loader_2(transform, batch_size):
+    df = pd.read_csv('/kaggle/input/pad-ufes-20/PAD-UFES-20/metadata.csv')
+
+    shifted_test_label = df["diagnostic"].to_numpy()
+    shifted_test_label = (shifted_test_label != "NEV")
+
+    shifted_test_path = df["img_id"].to_numpy()
+    shifted_test_path = '/kaggle/input/pad-ufes-20/PAD-UFES-20/Dataset/' + shifted_test_path
+
+    shifted_test_set = PAD_UFES_20(image_path=shifted_test_path, labels=shifted_test_label, transform=transform)
+    shifted_test_loader = torch.utils.data.DataLoader(shifted_test_set, shuffle=False, batch_size=batch_size)
+    return shifted_test_loader
+
 
 class ISIC2018(Dataset):
     def __init__(self, image_path, labels, transform=None, count=-1):
@@ -204,12 +226,39 @@ class ISIC2018(Dataset):
         self.image_files = image_path
         self.labels = labels
         if count != -1:
-            if count<len(self.image_files):
+            if count < len(self.image_files):
                 self.image_files = self.image_files[:count]
                 self.labels = self.labels[:count]
             else:
                 t = len(self.image_files)
-                for i in range(count-t):
+                for i in range(count - t):
+                    self.image_files.append(random.choice(self.image_files[:t]))
+                    self.labels.append(random.choice(self.labels[:t]))
+
+    def __getitem__(self, index):
+        image_file = self.image_files[index]
+        image = Image.open(image_file)
+        image = image.convert('RGB')
+        if self.transform is not None:
+            image = self.transform(image)
+        return image, self.labels[index]
+
+    def __len__(self):
+        return len(self.image_files)
+
+
+class PAD_UFES_20(Dataset):
+    def __init__(self, image_path, labels, transform=None, count=-1):
+        self.transform = transform
+        self.image_files = image_path
+        self.labels = labels
+        if count != -1:
+            if count < len(self.image_files):
+                self.image_files = self.image_files[:count]
+                self.labels = self.labels[:count]
+            else:
+                t = len(self.image_files)
+                for i in range(count - t):
                     self.image_files.append(random.choice(self.image_files[:t]))
                     self.labels.append(random.choice(self.labels[:t]))
 
