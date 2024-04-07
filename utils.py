@@ -169,7 +169,7 @@ def get_loader_aptos(batch_size, backbone):
                                                                   shuffle=True, num_workers=2, drop_last=False)
 
 def second_dataset(transform, batch_size):
-    df = pd.read_csv('./DR_grading.csv')
+    df = pd.read_csv('/kaggle/input/ddrdataset/DR_grading.csv')
     label = df["diagnosis"].to_numpy()
     path = df["id_code"].to_numpy()
 
@@ -179,7 +179,7 @@ def second_dataset(transform, batch_size):
     shifted_test_path = list(normal_path) + list(anomaly_path)
     shifted_test_label = [0] * len(normal_path) + [1] * len(anomaly_path)
 
-    shifted_test_path = ["./DR_grading/DR_grading/" + s for s in shifted_test_path]
+    shifted_test_path = ["/kaggle/input/ddrdataset/DR_grading/DR_grading/" + s for s in shifted_test_path]
     shifted_test_set = APTOS(image_path=shifted_test_path, labels=shifted_test_label, transform=transform)
     shifted_test_loader = torch.utils.data.DataLoader(shifted_test_set, shuffle=False, batch_size=batch_size)
     return shifted_test_loader
