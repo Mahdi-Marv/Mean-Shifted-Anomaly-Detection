@@ -222,10 +222,10 @@ def visualize_random_samples_from_clean_dataset(dataset, dataset_name):
 
     images, labels = zip(*random_samples)
 
-    print(f"len(labels): {len(labels)}")
-    print(f"type(labels): {type(labels)}")
-    print(f"type(labels[0]): {type(labels[0])}")
-    print(f"labels[0]: {labels[0]}")
+    # print(f"len(labels): {len(labels)}")
+    # print(f"type(labels): {type(labels)}")
+    # print(f"type(labels[0]): {type(labels[0])}")
+    # print(f"labels[0]: {labels[0]}")
     labels = torch.tensor(labels)
 
     # Show the 20 random samples
