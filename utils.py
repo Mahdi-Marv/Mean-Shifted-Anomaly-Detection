@@ -165,7 +165,8 @@ def get_loader_aptos(batch_size, backbone):
     test_loader = torch.utils.data.DataLoader(test_set, shuffle=True, batch_size=batch_size, num_workers=2,
                                               drop_last=False)
     test_loader_2 = second_dataset(transform, batch_size)
-    return train_loader, test_loader, torch.utils.data.DataLoader(train_set1, batch_size=batch_size,
+
+    return train_loader, test_loader_2, torch.utils.data.DataLoader(train_set1, batch_size=batch_size,
                                                                   shuffle=True, num_workers=2, drop_last=False)
 
 def second_dataset(transform, batch_size):
