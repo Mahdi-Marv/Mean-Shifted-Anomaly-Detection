@@ -229,16 +229,16 @@ def get_loader_waterbirds(batch_size):
     import pandas as pd
     df = pd.read_csv('/kaggle/input/waterbird/waterbird/metadata.csv')
     root = '/kaggle/input/waterbird/waterbird'
-    trainset = Waterbird(root=root, df=df, transform=transform_resnet18, train=True,
+    trainset = Waterbird(root=root, df=df, transform=transform_color, train=True,
                          count_train_landbg=3500, count_train_waterbg=100, mode='bg_all')
 
     trainset1 = Waterbird(root=root, df=df, transform=Transform(), train=True,
                          count_train_landbg=3500, count_train_waterbg=100, mode='bg_all')
 
-    testset_land = Waterbird(root=root, df=df, transform=transform_resnet18, train=False,
+    testset_land = Waterbird(root=root, df=df, transform=transform_color, train=False,
                             count_train_landbg=3500, count_train_waterbg=100, mode='bg_land')
 
-    testset_water = Waterbird(root=root, df=df, transform=transform_resnet18, train=False,
+    testset_water = Waterbird(root=root, df=df, transform=transform_color, train=False,
                              count_train_landbg=3500, count_train_waterbg=100, mode='bg_water')
 
     visualize_random_samples_from_clean_dataset(trainset, "trainset")
