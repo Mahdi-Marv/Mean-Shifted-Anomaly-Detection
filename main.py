@@ -42,8 +42,8 @@ def train_model(model, train_loader, test_loader, train_loader_1, device, args, 
         print('Epoch: {}, Loss: {}'.format(epoch + 1, running_loss))
         auc, _ = get_score(model, device, train_loader, test_loader)
         print('Epoch: {}, AUROC main is: {}'.format(epoch + 1, auc))
-        auc, _ = get_score(model, device, train_loader, test_loader2)
-        print('Epoch: {}, AUROC shifted is: {}'.format(epoch + 1, auc))
+        # auc, _ = get_score(model, device, train_loader, test_loader2)
+        # print('Epoch: {}, AUROC shifted is: {}'.format(epoch + 1, auc))
 
 
 def run_epoch(model, train_loader, optimizer, center, device, is_angular):
