@@ -1,3 +1,5 @@
+import os
+
 import torch
 import torchvision
 import torchvision.transforms as transforms
@@ -141,6 +143,59 @@ def get_loaders(dataset, label_class, batch_size, backbone):
         exit()
 
 
+
+class Waterbird(torch.utils.data.Dataset):
+    def __init__(self, root, df, transform, train=True, count_train_landbg=-1, count_train_waterbg=-1, mode='bg_all',
+                 count=-1):
+        self.transform = transform
+        self.train = train
+        self.df = df
+        lb_on_l = df[(df['y'] == 0) & (df['place'] == 0)]
+        lb_on_w = df[(df['y'] == 0) & (df['place'] == 1)]
+        self.normal_paths = []
+        self.labels = []
+
+        normal_df = lb_on_l.iloc[:count_train_landbg]
+        normal_df_np = normal_df['img_filename'].to_numpy()
+        self.normal_paths.extend([os.path.join(root, x) for x in normal_df_np][:count_train_landbg])
+        normal_df = lb_on_w.iloc[:count_train_waterbg]
+        normal_df_np = normal_df['img_filename'].to_numpy()
+        self.normal_paths.extend([os.path.join(root, x) for x in normal_df_np][:count_train_waterbg])
+
+        if train:
+            self.image_paths = self.normal_paths
+        else:
+            self.image_paths = []
+            if mode == 'bg_all':
+                dff = df
+            elif mode == 'bg_water':
+                dff = df[(df['place'] == 1)]
+            elif mode == 'bg_land':
+                dff = df[(df['place'] == 0)]
+            else:
+                print('Wrong mode!')
+                raise ValueError('Wrong bg mode!')
+            all_paths = dff[['img_filename', 'y']].to_numpy()
+            for i in range(len(all_paths)):
+                full_path = os.path.join(root, all_paths[i][0])
+                if full_path not in self.normal_paths:
+                    self.image_paths.append(full_path)
+                    self.labels.append(all_paths[i][1])
+
+
+    def __len__(self):
+        return len(self.image_paths)
+
+    def __getitem__(self, idx):
+        img_path = self.image_paths[idx]
+        img = Image.open(img_path).convert('RGB')
+        img = self.transform(img)
+        if self.train:
+            return img, 0
+        else:
+            return img, self.labels[idx]
+
+
 def get_loader_aptos(batch_size, backbone):
     train_normal_path = glob('/kaggle/working/Mean-Shifted-Anomaly-Detection/APTOS/train/NORMAL/*')
     train_normal_label = [0] * len(train_normal_path)
@@ -169,6 +224,40 @@ def get_loader_aptos(batch_size, backbone):
     return train_loader, test_loader_2, torch.utils.data.DataLoader(train_set1, batch_size=batch_size,
                                                                   shuffle=True, num_workers=2, drop_last=False)
 
+
+def get_loader_waterbirds(batch_size):
+    import pandas as pd
+    df = pd.read_csv('/kaggle/input/waterbird/waterbird/metadata.csv')
+    root = '/kaggle/input/waterbird/waterbird'
+    trainset = Waterbird(root=root, df=df, transform=transform_resnet18, train=True,
+                         count_train_landbg=3500, count_train_waterbg=100, mode='bg_all')
+
+    trainset1 = Waterbird(root=root, df=df, transform=Transform(), train=True,
+                         count_train_landbg=3500, count_train_waterbg=100, mode='bg_all')
+
+    testset_land = Waterbird(root=root, df=df, transform=transform_resnet18, train=False,
+                            count_train_landbg=3500, count_train_waterbg=100, mode='bg_land')
+
+    testset_water = Waterbird(root=root, df=df, transform=transform_resnet18, train=False,
+                             count_train_landbg=3500, count_train_waterbg=100, mode='bg_water')
+
+    visualize_random_samples_from_clean_dataset(trainset, "trainset")
+    visualize_random_samples_from_clean_dataset(trainset1, "trainset1")
+    visualize_random_samples_from_clean_dataset(testset_land, "testset_land")
+    visualize_random_samples_from_clean_dataset(testset_water, "testset_water")
+
+    train_loader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=2,
+                                                  drop_last=False)
+    train_loader1 = torch.utils.data.DataLoader(trainset1, batch_size=batch_size, shuffle=True, num_workers=2,
+                                                    drop_last=False)
+    test_loader_land = torch.utils.data.DataLoader(testset_land, batch_size=batch_size, shuffle=False, num_workers=2,
+                                                    drop_last=False)
+    test_loader_water = torch.utils.data.DataLoader(testset_water, batch_size=batch_size, shuffle=False, num_workers=2,
+                                                    drop_last=False)
+    return train_loader, test_loader_land, train_loader1, test_loader_water
+
+
+
 def second_dataset(transform, batch_size):
     df = pd.read_csv('/kaggle/input/ddrdataset/DR_grading.csv')
     label = df["diagnosis"].to_numpy()
@@ -186,31 +275,7 @@ def second_dataset(transform, batch_size):
     shifted_test_loader = torch.utils.data.DataLoader(shifted_test_set, shuffle=False, batch_size=batch_size)
     return shifted_test_loader
 
-class APTOS(Dataset):
-    def __init__(self, image_path, labels, transform=None, count=-1):
-        self.transform = transform
-        self.image_files = image_path
-        self.labels = labels
-        if count != -1:
-            if count < len(self.image_files):
-                self.image_files = self.image_files[:count]
-                self.labels = self.labels[:count]
-            else:
-                t = len(self.image_files)
-                for i in range(count - t):
-                    self.image_files.append(random.choice(self.image_files[:t]))
-                    self.labels.append(random.choice(self.labels[:t]))
 
-    def __getitem__(self, index):
-        image_file = self.image_files[index]
-        image = Image.open(image_file)
-        image = image.convert('RGB')
-        if self.transform is not None:
-            image = self.transform(image)
-        return image, self.labels[index]
-
-    def __len__(self):
-        return len(self.image_files)
 
 
 def show_images(images, labels, dataset_name):

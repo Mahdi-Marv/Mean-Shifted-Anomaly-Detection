@@ -28,7 +28,7 @@ def contrastive_loss(out_1, out_2):
     return loss
 
 
-def train_model(model, train_loader, test_loader, train_loader_1, device, args):
+def train_model(model, train_loader, test_loader, train_loader_1, device, args, test_loader2):
     model.eval()
     auc, feature_space = get_score(model, device, train_loader, test_loader)
     print('Epoch: {}, AUROC is: {}'.format(0, auc))
@@ -41,7 +41,9 @@ def train_model(model, train_loader, test_loader, train_loader_1, device, args):
         running_loss = run_epoch(model, train_loader_1, optimizer, center, device, args.angular)
         print('Epoch: {}, Loss: {}'.format(epoch + 1, running_loss))
         auc, _ = get_score(model, device, train_loader, test_loader)
-        print('Epoch: {}, AUROC is: {}'.format(epoch + 1, auc))
+        print('Epoch: {}, AUROC main is: {}'.format(epoch + 1, auc))
+        auc, _ = get_score(model, device, train_loader, test_loader2)
+        print('Epoch: {}, AUROC shifted is: {}'.format(epoch + 1, auc))
 
 
 def run_epoch(model, train_loader, optimizer, center, device, is_angular):
@@ -105,9 +107,8 @@ def main(args):
     model = utils.Model(args.backbone)
     model = model.to(device)
 
-    train_loader, test_loader, train_loader_1 = utils.get_loader_aptos(batch_size=args.batch_size,
-                                                                       backbone=args.backbone)
-    train_model(model, train_loader, test_loader, train_loader_1, device, args)
+    train_loader, test_loader_land, train_loader_1, test_loader_water = utils.get_loader_waterbirds(batch_size=args.batch_size)
+    train_model(model, train_loader, test_loader_land, train_loader_1, device, args, test_loader_water)
 
 
 if __name__ == "__main__":
