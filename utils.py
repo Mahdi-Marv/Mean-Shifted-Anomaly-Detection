@@ -242,7 +242,7 @@ def get_loader_waterbirds(batch_size):
                              count_train_landbg=3500, count_train_waterbg=100, mode='bg_water')
 
     visualize_random_samples_from_clean_dataset(trainset, "trainset")
-    visualize_random_samples_from_clean_dataset(trainset1, "trainset1")
+    # visualize_random_samples_from_clean_dataset(trainset1, "trainset1")
     visualize_random_samples_from_clean_dataset(testset_land, "testset_land")
     visualize_random_samples_from_clean_dataset(testset_water, "testset_water")
 
