@@ -1,4 +1,6 @@
 import os
+import shutil
+from pathlib import Path
 
 import torch
 import torchvision
@@ -143,6 +145,172 @@ def get_loaders(dataset, label_class, batch_size, backbone):
         exit()
 
 
+class BrainTest(torch.utils.data.Dataset):
+    def __init__(self, transform, test_id=1):
+
+        self.transform = transform
+        self.test_id = test_id
+
+        test_normal_path = glob('./Br35H/dataset/test/normal/*')
+        test_anomaly_path = glob('./Br35H/dataset/test/anomaly/*')
+
+        self.test_path = test_normal_path + test_anomaly_path
+        self.test_label = [0] * len(test_normal_path) + [1] * len(test_anomaly_path)
+
+        if self.test_id == 2:
+            test_normal_path = glob('./brats/dataset/test/normal/*')
+            test_anomaly_path = glob('./brats/dataset/test/anomaly/*')
+
+            self.test_path = test_normal_path + test_anomaly_path
+            self.test_label = [0] * len(test_normal_path) + [1] * len(test_anomaly_path)
+
+    def __len__(self):
+        return len(self.test_path)
+
+    def __getitem__(self, idx):
+        if torch.is_tensor(idx):
+            idx = idx.tolist()
+
+        img_path = self.test_path[idx]
+        img = Image.open(img_path).convert('RGB')
+        img = self.transform(img)
+
+        has_anomaly = 0 if self.test_label[idx] == 0 else 1
+
+        # this is fake:)
+        gt = torch.zeros([1, img.size()[-2], img.size()[-2]])
+        gt[:, :, 1:3] = 1
+        # return img, , has_anomaly, img_path
+        return img, gt, has_anomaly, img_path
+
+
+class BrainTrain(torch.utils.data.Dataset):
+    def __init__(self, transform):
+        self.transform = transform
+        self.image_paths = glob('./Br35H/dataset/train/normal/*')
+        brats_mod = glob('./brats/dataset/train/normal/*')
+        random.seed(1)
+        random_brats_images = random.sample(brats_mod, 50)
+        self.image_paths.extend(random_brats_images)
+
+    def __len__(self):
+        return len(self.image_paths)
+
+    def __getitem__(self, idx):
+        img_path = self.image_paths[idx]
+        img = Image.open(img_path).convert('RGB')
+        img = self.transform(img)
+        return img, 0
+
+
+def prepare_br35h_dataset_files():
+    normal_path35 = '/kaggle/input/brain-tumor-detection/no'
+    anomaly_path35 = '/kaggle/input/brain-tumor-detection/yes'
+
+    print(f"len(os.listdir(normal_path35)): {len(os.listdir(normal_path35))}")
+    print(f"len(os.listdir(anomaly_path35)): {len(os.listdir(anomaly_path35))}")
+
+    Path('./Br35H/dataset/test/anomaly').mkdir(parents=True, exist_ok=True)
+
+    flist = [f for f in os.listdir('./Br35H/dataset/test/anomaly')]
+    for f in flist:
+        os.remove(os.path.join('./Br35H/dataset/test/anomaly', f))
+
+    anom35 = os.listdir(anomaly_path35)
+    for f in anom35:
+        shutil.copy2(os.path.join(anomaly_path35, f), './Br35H/dataset/test/anomaly')
+
+
+    normal35 = os.listdir(normal_path35)
+    random.shuffle(normal35)
+    ratio = 0.7
+    sep = round(len(normal35) * ratio)
+
+    Path('./Br35H/dataset/test/normal').mkdir(parents=True, exist_ok=True)
+    Path('./Br35H/dataset/train/normal').mkdir(parents=True, exist_ok=True)
+
+    flist = [f for f in os.listdir('./Br35H/dataset/test/normal')]
+    for f in flist:
+        os.remove(os.path.join('./Br35H/dataset/test/normal', f))
+
+    flist = [f for f in os.listdir('./Br35H/dataset/train/normal')]
+    for f in flist:
+        os.remove(os.path.join('./Br35H/dataset/train/normal', f))
+
+    for f in normal35[:sep]:
+        shutil.copy2(os.path.join(normal_path35, f), './Br35H/dataset/train/normal')
+    for f in normal35[sep:]:
+        shutil.copy2(os.path.join(normal_path35, f), './Br35H/dataset/test/normal')
+
+
+def prepare_brats2015_dataset_files():
+    labels = pd.read_csv('/kaggle/input/brain-tumor/Brain Tumor.csv')
+    labels = labels[['Image', 'Class']]
+    labels.tail() # 0: no tumor, 1: tumor
+
+    labels.head()
+
+    brats_path = '/kaggle/input/brain-tumor/Brain Tumor/Brain Tumor'
+    lbl = dict(zip(labels.Image, labels.Class))
+
+    keys = lbl.keys()
+    normalbrats = [x for x in keys if lbl[x] == 0]
+    anomalybrats = [x for x in keys if lbl[x] == 1]
+
+    Path('./brats/dataset/test/anomaly').mkdir(parents=True, exist_ok=True)
+    Path('./brats/dataset/test/normal').mkdir(parents=True, exist_ok=True)
+    Path('./brats/dataset/train/normal').mkdir(parents=True, exist_ok=True)
+
+    flist = [f for f in os.listdir('./brats/dataset/test/anomaly')]
+    for f in flist:
+        os.remove(os.path.join('./brats/dataset/test/anomaly', f))
+
+    flist = [f for f in os.listdir('./brats/dataset/test/normal')]
+    for f in flist:
+        os.remove(os.path.join('./brats/dataset/test/normal', f))
+
+    flist = [f for f in os.listdir('./brats/dataset/train/normal')]
+    for f in flist:
+        os.remove(os.path.join('./brats/dataset/train/normal', f))
+
+    ratio = 0.7
+    random.shuffle(normalbrats)
+    bratsep = round(len(normalbrats) * ratio)
+
+    for f in anomalybrats:
+        ext = f'{f}.jpg'
+        shutil.copy2(os.path.join(brats_path, ext), './brats/dataset/test/anomaly')
+    for f in normalbrats[:bratsep]:
+        ext = f'{f}.jpg'
+        shutil.copy2(os.path.join(brats_path, ext), './brats/dataset/train/normal')
+    for f in normalbrats[bratsep:]:
+        ext = f'{f}.jpg'
+        shutil.copy2(os.path.join(brats_path, ext), './brats/dataset/test/normal')
+
+
+def get_loader_brain(batch_size, backbone):
+    prepare_br35h_dataset_files()
+    prepare_brats2015_dataset_files()
+    transform = transform_color if backbone == 152 else transform_resnet18
+
+
+    train_data = BrainTrain(transform=transform)
+    train_data1 = BrainTrain(transform=Transform())
+
+    test_data1 = BrainTest(transform=transform, test_id=1)
+    test_data2 = BrainTest(transform=transform, test_id=2)
+
+    train_loader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, shuffle=True, num_workers=2,
+                                               drop_last=False)
+    train_loader1 = torch.utils.data.DataLoader(train_data1, batch_size=batch_size, shuffle=True, num_workers=2,
+                                                drop_last=False)
+    test_loader_main = torch.utils.data.DataLoader(test_data1, batch_size=batch_size, shuffle=False, num_workers=2,
+                                                   drop_last=False)
+    test_loader_shift = torch.utils.data.DataLoader(test_data2, batch_size=batch_size, shuffle=False, num_workers=2,
+                                                    drop_last=False)
+    return train_loader, test_loader_main, train_loader1, test_loader_shift
+
+
 
 class Waterbird(torch.utils.data.Dataset):
     def __init__(self, root, df, transform, train=True, count_train_landbg=-1, count_train_waterbg=-1, mode='bg_all',
@@ -223,6 +391,34 @@ def get_loader_aptos(batch_size, backbone):
 
     return train_loader, test_loader_2, torch.utils.data.DataLoader(train_set1, batch_size=batch_size,
                                                                   shuffle=True, num_workers=2, drop_last=False)
+
+
+class ISIC2018(Dataset):
+    def __init__(self, image_path, labels, transform=None, count=-1):
+        self.transform = transform
+        self.image_files = image_path
+        self.labels = labels
+        if count != -1:
+            if count < len(self.image_files):
+                self.image_files = self.image_files[:count]
+                self.labels = self.labels[:count]
+            else:
+                t = len(self.image_files)
+                for i in range(count - t):
+                    self.image_files.append(random.choice(self.image_files[:t]))
+                    self.labels.append(random.choice(self.labels[:t]))
+
+    def __getitem__(self, index):
+        image_file = self.image_files[index]
+        image = Image.open(image_file)
+        image = image.convert('RGB')
+        if self.transform is not None:
+            image = self.transform(image)
+
+        return image, self.labels[index]
+
+    def __len__(self):
+        return len(self.image_files)
 
 
 def get_loader_waterbirds(batch_size):

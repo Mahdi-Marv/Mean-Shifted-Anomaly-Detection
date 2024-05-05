@@ -106,9 +106,12 @@ def main(args):
     print(device)
     model = utils.Model(args.backbone)
     model = model.to(device)
+    if args.dataset == 'isic':
+        train_loader, test_loader_1, train_loader_1, test_loader_2 = utils.get_loader_isic(batch_size=args.batch_size)
+    if args.dataset == 'brain':
+        train_loader, test_loader_1, train_loader_1, test_loader_2 = utils.get_loader_brain(batch_size=args.batch_size)
 
-    train_loader, test_loader_land, train_loader_1, test_loader_water = utils.get_loader_waterbirds(batch_size=args.batch_size)
-    train_model(model, train_loader, test_loader_land, train_loader_1, device, args, test_loader_water)
+    train_model(model, train_loader, test_loader_1, train_loader_1, device, args, test_loader_2)
 
 
 if __name__ == "__main__":
