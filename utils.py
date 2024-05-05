@@ -297,6 +297,10 @@ def get_loader_brain(batch_size, backbone):
     test_data1 = BrainTest(transform=transform, test_id=1)
     test_data2 = BrainTest(transform=transform, test_id=2)
 
+    visualize_random_samples_from_clean_dataset(train_data, "trainset")
+    visualize_random_samples_from_clean_dataset(test_data1, "testset2")
+    visualize_random_samples_from_clean_dataset(test_data2, "testset2")
+
     train_loader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, shuffle=True, num_workers=2,
                                                drop_last=False)
     train_loader1 = torch.utils.data.DataLoader(train_data1, batch_size=batch_size, shuffle=True, num_workers=2,
