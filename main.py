@@ -109,7 +109,7 @@ def main(args):
     if args.dataset == 'isic':
         train_loader, test_loader_1, train_loader_1, test_loader_2 = utils.get_loader_isic(batch_size=args.batch_size)
     if args.dataset == 'brain':
-        train_loader, test_loader_1, train_loader_1, test_loader_2 = utils.get_loader_brain(batch_size=args.batch_size)
+        train_loader, test_loader_1, train_loader_1, test_loader_2 = utils.get_loader_brain(batch_size=args.batch_size, backbone=args.backbone)
 
     train_model(model, train_loader, test_loader_1, train_loader_1, device, args, test_loader_2)
 
