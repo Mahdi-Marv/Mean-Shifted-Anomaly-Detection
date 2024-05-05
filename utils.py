@@ -177,11 +177,8 @@ class BrainTest(torch.utils.data.Dataset):
 
         has_anomaly = 0 if self.test_label[idx] == 0 else 1
 
-        # this is fake:)
-        gt = torch.zeros([1, img.size()[-2], img.size()[-2]])
-        gt[:, :, 1:3] = 1
         # return img, , has_anomaly, img_path
-        return img, gt, has_anomaly, img_path
+        return img, has_anomaly
 
 
 class BrainTrain(torch.utils.data.Dataset):
