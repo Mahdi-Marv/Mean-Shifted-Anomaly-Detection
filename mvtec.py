@@ -91,12 +91,13 @@ from glob import glob
 class MVTEC(data.Dataset):
 
     def __init__(self, root, train=True,
-                 transform=None,
+                 transform=None, transform_norm=None,
                  category='carpet', resize=None, use_imagenet=False,
                  select_random_image_from_imagenet=False, shrink_factor=0.9):
         self.root = root
         self.transform = transform
         self.image_files = []
+        self.transform_norm = transform_norm
         print("category MVTecDataset:", category)
         if train:
             self.image_files = glob(os.path.join(root, category, "train", "good", "*.png"))
@@ -153,6 +154,7 @@ class MVTEC(data.Dataset):
 
         to_trans = transforms.ToTensor()
         image = to_trans(image)
+        image = self.transform_norm(image)
 
         return image, target
 
@@ -162,20 +164,21 @@ class MVTEC(data.Dataset):
 
 def get_loader_mvtec(batch_size, backbone, category):
     transform = transform_color if backbone == 152 else transform_resnet18
+    transform_color2 = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
     train_data = MVTEC(root='/kaggle/input/mvtec-ad', train=True, transform=transform, category=category,
                        resize=224, use_imagenet=True, select_random_image_from_imagenet=True,
-                       shrink_factor=1)
+                       shrink_factor=1, transform_norm=transform_color2)
     test_data1 = MVTEC(root='/kaggle/input/mvtec-ad', train=False, transform=transform, category=category,
                        resize=224, use_imagenet=True, select_random_image_from_imagenet=True,
-                       shrink_factor=1)
+                       shrink_factor=1, transform_norm=transform_color2)
     test_data2 = MVTEC(root='/kaggle/input/mvtec-ad', train=False, transform=transform, category=category,
                        resize=224, use_imagenet=True, select_random_image_from_imagenet=True,
-                       shrink_factor=0.9)
+                       shrink_factor=0.9, transform_norm=transform_color2)
 
     train_data1 = MVTEC(root='/kaggle/input/mvtec-ad', train=True, transform=Transform(), category=category,
                         resize=224, use_imagenet=True, select_random_image_from_imagenet=True,
-                        shrink_factor=1)
+                        shrink_factor=1, transform_norm=transform_color2)
 
     print('len(train_data)', len(train_data))
     print('len(test_data1)', len(test_data1))
