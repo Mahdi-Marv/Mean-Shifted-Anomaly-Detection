@@ -144,13 +144,13 @@ class MVTEC(data.Dataset):
             imagenet30_img = self.imagenet30_testset[100][0].resize((224, 224))
 
         # if resizing image
-        if self.use_imagenet and self.resize is not None:
+        if self.use_imagenet and self.resize is not None and :
             resizeTransf = transforms.Resize((self.resize, self.resize))
             image = resizeTransf(image)
 
         #         print(f"imagenet30_img.size: {imagenet30_img.size}")
         #         print(f"img.size: {img.size}")
-        image = center_paste(imagenet30_img, image)
+            image = center_paste(imagenet30_img, image)
 
         to_trans = transforms.ToTensor()
         image = to_trans(image)
