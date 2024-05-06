@@ -144,7 +144,7 @@ class MVTEC(data.Dataset):
             imagenet30_img = self.imagenet30_testset[100][0].resize((224, 224))
 
         # if resizing image
-        if self.use_imagenet and self.resize is not None and :
+        if self.use_imagenet and self.resize is not None:
             resizeTransf = transforms.Resize((self.resize, self.resize))
             image = resizeTransf(image)
 
