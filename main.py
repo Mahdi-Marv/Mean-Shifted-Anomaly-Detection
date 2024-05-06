@@ -2,6 +2,8 @@ import torch
 from sklearn.metrics import roc_auc_score
 import torch.optim as optim
 import argparse
+
+import mvtec
 import utils
 from tqdm import tqdm
 import torch.nn.functional as F
@@ -106,10 +108,9 @@ def main(args):
     print(device)
     model = utils.Model(args.backbone)
     model = model.to(device)
-    if args.dataset == 'isic':
-        train_loader, test_loader_1, train_loader_1, test_loader_2 = utils.get_loader_isic(batch_size=args.batch_size)
-    if args.dataset == 'brain':
-        train_loader, test_loader_1, train_loader_1, test_loader_2 = utils.get_loader_brain(batch_size=args.batch_size, backbone=args.backbone)
+    if args.dataset == 'mvtec':
+        train_loader, test_loader_1, train_loader_1, test_loader_2 = mvtec.get_loader_mvtec(batch_size=args.batch_size, backbone=args.backbone,
+                                                                                            category=args.category)
 
     train_model(model, train_loader, test_loader_1, train_loader_1, device, args, test_loader_2)
 
@@ -122,6 +123,7 @@ if __name__ == "__main__":
     parser.add_argument('--lr', type=float, default=1e-5, help='The initial learning rate.')
     parser.add_argument('--batch_size', default=64, type=int)
     parser.add_argument('--backbone', default=152, type=int, help='ResNet 18/152')
+    parser.add_argument('--category', default='carpet', type=str, help='mvtec category')
     parser.add_argument('--angular', action='store_true', help='Train with angular center loss')
     args = parser.parse_args()
     main(args)
