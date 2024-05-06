@@ -112,6 +112,8 @@ def main(args):
         train_loader, test_loader_1, train_loader_1, test_loader_2 = utils.get_loader_isic(batch_size=args.batch_size)
     if args.dataset == 'brain':
         train_loader, test_loader_1, train_loader_1, test_loader_2 = utils.get_loader_brain(batch_size=args.batch_size, backbone=args.backbone)
+    if args.dataset == 'wbc':
+        train_loader, test_loader_1, train_loader_1, test_loader_2 = utils.get_loader_wbc(batch_size=args.batch_size, backbone=args.backbone)
     if args.dataset == 'rsna':
         train_loader, test_loader_1, train_loader_1, test_loader_2 = rsna.build_rsna_dataloader(batch_size=args.batch_size,
                                                                                             backbone=args.backbone)

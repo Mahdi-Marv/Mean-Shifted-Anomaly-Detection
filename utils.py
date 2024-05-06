@@ -13,6 +13,8 @@ from PIL import ImageFilter
 import random
 from torchvision.transforms import InterpolationMode
 
+from wbc import WBCDataset
+
 BICUBIC = InterpolationMode.BICUBIC
 
 from torchvision import datasets, transforms
@@ -283,6 +285,32 @@ def prepare_brats2015_dataset_files():
     for f in normalbrats[bratsep:]:
         ext = f'{f}.jpg'
         shutil.copy2(os.path.join(brats_path, ext), './brats/dataset/test/normal')
+
+
+def get_loader_wbc(batch_size, backbone):
+    transform = transform_color if backbone == 152 else transform_resnet18
+
+    df1 = pd.read_csv('/kaggle/working/segmentation_WBC/Class Labels of Dataset 1.csv')
+    df2 = pd.read_csv('/kaggle/working/segmentation_WBC/Class Labels of Dataset 2.csv')
+
+    test_set1 = WBCDataset('/kaggle/working/segmentation_WBC/Dataset 1', '/kaggle/working/segmentation_WBC/Dataset 2',
+                           df1, df2, transform=transform, train=False, test_id=1)
+    test_set2 = WBCDataset('/kaggle/working/segmentation_WBC/Dataset 1', '/kaggle/working/segmentation_WBC/Dataset 2',
+                           df1, df2, transform=transform, train=False, test_id=2)
+    train_set = WBCDataset('/kaggle/working/segmentation_WBC/Dataset 1', '/kaggle/working/segmentation_WBC/Dataset 2',
+                           df1, df2, transform=transform, train=True)
+
+    train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=2,
+                                               drop_last=False)
+    train_loader1 = torch.utils.data.DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=2,
+                                                drop_last=False)
+    test_loader_main = torch.utils.data.DataLoader(test_set1, batch_size=batch_size, shuffle=False, num_workers=2,
+                                                   drop_last=False)
+    test_loader_shift = torch.utils.data.DataLoader(test_set2, batch_size=batch_size, shuffle=False, num_workers=2,
+                                                    drop_last=False)
+
+    return train_loader, test_loader_main, train_loader1, test_loader_shift
+
 
 
 def get_loader_brain(batch_size, backbone):
