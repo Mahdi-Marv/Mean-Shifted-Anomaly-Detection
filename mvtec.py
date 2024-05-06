@@ -167,17 +167,17 @@ class MVTEC(data.Dataset):
 def get_loader_mvtec(batch_size, backbone, category):
     transform = transform_color if backbone == 152 else transform_resnet18
 
-    train_data = MVTEC(root='./mvtec_anomaly_detection', train=True, transform=transform, category=category,
+    train_data = MVTEC(root='/kaggle/input/mvtec-ad', train=True, transform=transform, category=category,
                        resize=224, use_imagenet=True, select_random_image_from_imagenet=True,
                        shrink_factor=1)
-    test_data1 = MVTEC(root='./mvtec_anomaly_detection', train=False, transform=transform, category=category,
+    test_data1 = MVTEC(root='/kaggle/input/mvtec-ad', train=False, transform=transform, category=category,
                        resize=224, use_imagenet=True, select_random_image_from_imagenet=True,
                        shrink_factor=1)
-    test_data2 = MVTEC(root='./mvtec_anomaly_detection', train=False, transform=transform, category=category,
+    test_data2 = MVTEC(root='/kaggle/input/mvtec-ad', train=False, transform=transform, category=category,
                        resize=224, use_imagenet=True, select_random_image_from_imagenet=True,
                        shrink_factor=0.9)
 
-    train_data1 = MVTEC(root='./mvtec_anomaly_detection', train=True, transform=Transform(), category=category,
+    train_data1 = MVTEC(root='/kaggle/input/mvtec-ad', train=True, transform=Transform(), category=category,
                         resize=224, use_imagenet=True, select_random_image_from_imagenet=True,
                         shrink_factor=1)
 
