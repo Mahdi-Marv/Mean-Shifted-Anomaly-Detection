@@ -2,6 +2,8 @@ import torch
 from sklearn.metrics import roc_auc_score
 import torch.optim as optim
 import argparse
+
+import rsna
 import utils
 from tqdm import tqdm
 import torch.nn.functional as F
@@ -111,7 +113,7 @@ def main(args):
     if args.dataset == 'brain':
         train_loader, test_loader_1, train_loader_1, test_loader_2 = utils.get_loader_brain(batch_size=args.batch_size, backbone=args.backbone)
     if args.dataset == 'rsna':
-        train_loader, test_loader_1, train_loader_1, test_loader_2 = utils.get_loader_brain(batch_size=args.batch_size,
+        train_loader, test_loader_1, train_loader_1, test_loader_2 = rsna.build_rsna_dataloader(batch_size=args.batch_size,
                                                                                             backbone=args.backbone)
 
     train_model(model, train_loader, test_loader_1, train_loader_1, device, args, test_loader_2)
