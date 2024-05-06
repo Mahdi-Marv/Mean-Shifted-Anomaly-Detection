@@ -85,19 +85,8 @@ class RSNA(Dataset):
         if self.transform is not None:
             image = self.transform(image)
 
-        height = image.shape[1]
-        width = image.shape[2]
 
-        ret = {
-            'filename': os.path.basename(self.image_files[index]),
-            'image': image,
-            'height': height,
-            'width': width,
-            'label': self.labels[index],
-            'clsname': 'rsna',
-            'mask': torch.zeros((1, height, width)) if self.labels[index] == 0 else torch.ones((1, height, width))
-        }
-        return ret
+        return image, self.labels[index]
 
     def __len__(self):
         return len(self.image_files)
@@ -125,19 +114,7 @@ class ChestX_Ray(Dataset):
         if self.transform is not None:
             image = self.transform(image)
 
-        height = image.shape[1]
-        width = image.shape[2]
-
-        ret = {
-            'filename': os.path.basename(self.image_files[index]),
-            'image': image,
-            'height': height,
-            'width': width,
-            'label': self.labels[index],
-            'clsname': 'rsna',
-            'mask': torch.zeros((1, height, width)) if self.labels[index] == 0 else torch.ones((1, height, width))
-        }
-        return ret
+        return image, self.labels[index]
 
     def __len__(self):
         return len(self.image_files)
