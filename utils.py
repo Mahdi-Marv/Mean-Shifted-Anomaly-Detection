@@ -299,10 +299,12 @@ def get_loader_wbc(batch_size, backbone):
                            df1, df2, transform=transform, train=False, test_id=2)
     train_set = WBCDataset('/kaggle/working/segmentation_WBC/Dataset 1', '/kaggle/working/segmentation_WBC/Dataset 2',
                            df1, df2, transform=transform, train=True)
+    train_set1 = WBCDataset('/kaggle/working/segmentation_WBC/Dataset 1', '/kaggle/working/segmentation_WBC/Dataset 2',
+                           df1, df2, transform=Transform(), train=True)
 
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=2,
                                                drop_last=False)
-    train_loader1 = torch.utils.data.DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=2,
+    train_loader1 = torch.utils.data.DataLoader(train_set1, batch_size=batch_size, shuffle=True, num_workers=2,
                                                 drop_last=False)
     test_loader_main = torch.utils.data.DataLoader(test_set1, batch_size=batch_size, shuffle=False, num_workers=2,
                                                    drop_last=False)
