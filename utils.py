@@ -219,7 +219,6 @@ def prepare_br35h_dataset_files():
     for f in anom35:
         shutil.copy2(os.path.join(anomaly_path35, f), './Br35H/dataset/test/anomaly')
 
-
     normal35 = os.listdir(normal_path35)
     random.shuffle(normal35)
     ratio = 0.7
@@ -245,7 +244,7 @@ def prepare_br35h_dataset_files():
 def prepare_brats2015_dataset_files():
     labels = pd.read_csv('/kaggle/input/brain-tumor/Brain Tumor.csv')
     labels = labels[['Image', 'Class']]
-    labels.tail() # 0: no tumor, 1: tumor
+    labels.tail()  # 0: no tumor, 1: tumor
 
     labels.head()
 
@@ -300,7 +299,7 @@ def get_loader_wbc(batch_size, backbone):
     train_set = WBCDataset('/kaggle/working/segmentation_WBC/Dataset 1', '/kaggle/working/segmentation_WBC/Dataset 2',
                            df1, df2, transform=transform, train=True)
     train_set1 = WBCDataset('/kaggle/working/segmentation_WBC/Dataset 1', '/kaggle/working/segmentation_WBC/Dataset 2',
-                           df1, df2, transform=Transform(), train=True)
+                            df1, df2, transform=Transform(), train=True)
 
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=2,
                                                drop_last=False)
@@ -314,12 +313,10 @@ def get_loader_wbc(batch_size, backbone):
     return train_loader, test_loader_main, train_loader1, test_loader_shift
 
 
-
 def get_loader_brain(batch_size, backbone):
     prepare_br35h_dataset_files()
     prepare_brats2015_dataset_files()
     transform = transform_color if backbone == 152 else transform_resnet18
-
 
     train_data = BrainTrain(transform=transform)
     train_data1 = BrainTrain(transform=Transform())
@@ -340,7 +337,6 @@ def get_loader_brain(batch_size, backbone):
     test_loader_shift = torch.utils.data.DataLoader(test_data2, batch_size=batch_size, shuffle=False, num_workers=2,
                                                     drop_last=False)
     return train_loader, test_loader_main, train_loader1, test_loader_shift
-
 
 
 class Waterbird(torch.utils.data.Dataset):
@@ -381,7 +377,6 @@ class Waterbird(torch.utils.data.Dataset):
                     self.image_paths.append(full_path)
                     self.labels.append(all_paths[i][1])
 
-
     def __len__(self):
         return len(self.image_paths)
 
@@ -421,7 +416,7 @@ def get_loader_aptos(batch_size, backbone):
     test_loader_2 = second_dataset(transform, batch_size)
 
     return train_loader, test_loader_2, torch.utils.data.DataLoader(train_set1, batch_size=batch_size,
-                                                                  shuffle=True, num_workers=2, drop_last=False)
+                                                                    shuffle=True, num_workers=2, drop_last=False)
 
 
 class ISIC2018(Dataset):
@@ -460,13 +455,13 @@ def get_loader_waterbirds(batch_size):
                          count_train_landbg=3500, count_train_waterbg=100, mode='bg_all')
 
     trainset1 = Waterbird(root=root, df=df, transform=Transform(), train=True,
-                         count_train_landbg=3500, count_train_waterbg=100, mode='bg_all')
+                          count_train_landbg=3500, count_train_waterbg=100, mode='bg_all')
 
     testset_land = Waterbird(root=root, df=df, transform=transform_color, train=False,
-                            count_train_landbg=3500, count_train_waterbg=100, mode='bg_land')
+                             count_train_landbg=3500, count_train_waterbg=100, mode='bg_land')
 
     testset_water = Waterbird(root=root, df=df, transform=transform_color, train=False,
-                             count_train_landbg=3500, count_train_waterbg=100, mode='bg_water')
+                              count_train_landbg=3500, count_train_waterbg=100, mode='bg_water')
 
     visualize_random_samples_from_clean_dataset(trainset, "trainset")
     # visualize_random_samples_from_clean_dataset(trainset1, "trainset1")
@@ -474,15 +469,144 @@ def get_loader_waterbirds(batch_size):
     visualize_random_samples_from_clean_dataset(testset_water, "testset_water")
 
     train_loader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=2,
-                                                  drop_last=False)
+                                               drop_last=False)
     train_loader1 = torch.utils.data.DataLoader(trainset1, batch_size=batch_size, shuffle=True, num_workers=2,
-                                                    drop_last=False)
+                                                drop_last=False)
     test_loader_land = torch.utils.data.DataLoader(testset_land, batch_size=batch_size, shuffle=False, num_workers=2,
-                                                    drop_last=False)
+                                                   drop_last=False)
     test_loader_water = torch.utils.data.DataLoader(testset_water, batch_size=batch_size, shuffle=False, num_workers=2,
                                                     drop_last=False)
     return train_loader, test_loader_land, train_loader1, test_loader_water
 
+
+def get_cityscape_globs():
+    from glob import glob
+    import random
+    normal_path = glob('/kaggle/input/cityscapes-5-10-threshold/cityscapes/ID/*')
+    anomaly_path = glob('/kaggle/input/cityscapes-5-10-threshold/cityscapes/OOD/*')
+
+    random.seed(42)
+    random.shuffle(normal_path)
+    train_ratio = 0.7
+    separator = int(train_ratio * len(normal_path))
+    normal_path_train = normal_path[:separator]
+    normal_path_test = normal_path[separator:]
+
+    return normal_path_train, normal_path_test, anomaly_path
+
+
+def get_gta_globs():
+    from glob import glob
+    nums = [f'0{i}' for i in range(1, 10)] + ['10']
+    globs_id = []
+    globs_ood = []
+    for i in range(10):
+        id_path = f'/kaggle/input/gta5-15-5-{nums[i]}/gta5_{i}/gta5_{i}/ID/*'
+        ood_path = f'/kaggle/input/gta5-15-5-{nums[i]}/gta5_{i}/gta5_{i}/OOD/*'
+        globs_id.append(glob(id_path))
+        globs_ood.append(glob(ood_path))
+        print(i, len(globs_id[-1]), len(globs_ood[-1]))
+
+    glob_id = []
+    glob_ood = []
+    for i in range(len(globs_id)):
+        glob_id += globs_id[i]
+        glob_ood += globs_ood[i]
+
+    random.seed(42)
+    random.shuffle(glob_id)
+    train_ratio = 0.7
+    separator = int(train_ratio * len(glob_id))
+    glob_train_id = glob_id[:separator]
+    glob_test_id = glob_id[separator:]
+
+    return glob_train_id, glob_test_id, glob_ood
+
+
+def get_loader_gta(batch_size, backbone):
+    normal_path_train, normal_path_test, anomaly_path = get_cityscape_globs()
+    test_path = normal_path_test + anomaly_path
+    test_label = [0] * len(normal_path_test) + [1] * len(anomaly_path)
+    train_label = [0] * len(normal_path_train)
+    glob_train_id, glob_test_id, glob_ood = get_gta_globs()
+    transform = transform_color if backbone == 152 else transform_resnet18
+
+    train_set = GTA(image_path=normal_path_train, labels=train_label,
+                    transform=transform)
+
+    train_set1 = GTA(image_path=normal_path_train, labels=train_label,
+                    transform=Transform())
+
+    test_set1 = GTA_Test(image_path=test_path, labels=test_label,
+                            transform=transform)
+    test_set2 = GTA_Test(image_path=glob_test_id + glob_ood, labels=[0] * len(glob_test_id) + [1] * len(glob_ood),
+                               transform=transform)
+
+    train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=2,
+                                               drop_last=False)
+    train_loader1 = torch.utils.data.DataLoader(train_set1, batch_size=batch_size, shuffle=True, num_workers=2,
+                                                drop_last=False)
+    test_loader_1 = torch.utils.data.DataLoader(test_set1, batch_size=batch_size, shuffle=False, num_workers=2,
+                                                   drop_last=False)
+    test_loader_2 = torch.utils.data.DataLoader(test_set2, batch_size=batch_size, shuffle=False, num_workers=2,
+                                                    drop_last=False)
+    return train_loader, test_loader_1, train_loader1, test_loader_2
+
+
+class GTA(Dataset):
+    def __init__(self, image_path, labels, transform=None, count=-1):
+        self.transform = transform
+        self.image_files = image_path
+        self.labels = labels
+        if count != -1:
+            if count < len(self.image_files):
+                self.image_files = self.image_files[:count]
+                self.labels = self.labels[:count]
+            else:
+                t = len(self.image_files)
+                for i in range(count - t):
+                    self.image_files.append(random.choice(self.image_files[:t]))
+                    self.labels.append(random.choice(self.labels[:t]))
+
+    def __getitem__(self, index):
+        image_file = self.image_files[index]
+        image = Image.open(image_file)
+        image = image.convert('RGB')
+        if self.transform is not None:
+            image = self.transform(image)
+
+        return image, self.labels[index]
+
+    def __len__(self):
+        return len(self.image_files)
+
+
+class GTA_Test(Dataset):
+    def __init__(self, image_path, labels, transform=None, count=-1):
+        self.transform = transform
+        self.image_files = image_path
+        self.labels = labels
+        if count != -1:
+            if count < len(self.image_files):
+                self.image_files = self.image_files[:count]
+                self.labels = self.labels[:count]
+            else:
+                t = len(self.image_files)
+                for i in range(count - t):
+                    self.image_files.append(random.choice(self.image_files[:t]))
+                    self.labels.append(random.choice(self.labels[:t]))
+
+    def __getitem__(self, index):
+        image_file = self.image_files[index]
+        image = Image.open(image_file)
+        image = image.convert('RGB')
+        if self.transform is not None:
+            image = self.transform(image)
+
+        return image, self.labels[index]
+
+    def __len__(self):
+        return len(self.image_files)
 
 
 def second_dataset(transform, batch_size):
@@ -501,8 +625,6 @@ def second_dataset(transform, batch_size):
     visualize_random_samples_from_clean_dataset(shifted_test_set, "shift testset")
     shifted_test_loader = torch.utils.data.DataLoader(shifted_test_set, shuffle=False, batch_size=batch_size)
     return shifted_test_loader
-
-
 
 
 def show_images(images, labels, dataset_name):
